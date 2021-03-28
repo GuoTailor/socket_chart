@@ -1,0 +1,15 @@
+server:
+  port: 80
+
+spring:
+  r2dbc:
+    username: postgres
+    password: admin
+    url: r2dbc:postgres://localhost:5432/socket_chart
+    pool:
+      enabled: true
+
+logging:
+  level:
+    io.r2dbc.postgresql.QUERY: DEBUG
+    io.r2dbc.postgresql.PARAM: DEBUG
