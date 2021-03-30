@@ -157,19 +157,24 @@ class _ChartState extends State<Chart> {
                 child: ListView.separated(
                   itemCount: items.length,
                   itemBuilder: (context, index) {
-                    return ListTile(
-                      onTap: () {
-                        onTop(index);
-                      },
-                      onLongPress: () async {
-                        await EliminateRoomDialog().show(context, id, roomId);
-                        getAllRoom();
-                      },
-                      tileColor: index == this.index ? Color(0xffe8e8e8) : null,
-                      title: Text(
-                        '${items[index]['name']}',
-                        style: TextStyle(fontSize: 20.0, fontFamily: 'Roboto'),
-                      ),
+                    return Listener(
+                        behavior: HitTestBehavior.opaque,
+                        onPointerDown: (event) async {
+                          if (event.buttons == 2) {
+                            await EliminateRoomDialog().show(context, id, roomId);
+                            getAllRoom();
+                          }
+                        },
+                        child: ListTile(
+                          onTap: () {
+                            onTop(index);
+                          },
+                          tileColor: index == this.index ? Color(0xffe8e8e8) : null,
+                          title: Text(
+                            '${items[index]['name']}',
+                            style: TextStyle(fontSize: 20.0, fontFamily: 'Roboto'),
+                          ),
+                        )
                     );
                   },
                   separatorBuilder: (context, index) {
