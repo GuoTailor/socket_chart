@@ -125,11 +125,19 @@ class _MyStatefulWidgetState extends State<MyStatefulWidget> {
             });
 
             var prefs = await SharedPreferences.getInstance();
-            var response = await dio.post("/user/login",
-                data: jsonEncode(<String, String>{
-                  'username': username,
-                  'password': password
-                }));
+            var response;
+            try {
+              response = await dio.post("/user/login",
+                  data: jsonEncode(<String, String>{
+                    'username': username,
+                    'password': password
+                  }));
+            } catch (e) {
+              setState(() {
+                isLoading = false;
+                info = "网络错误";
+              });
+            }
             if (response.statusCode == 200) {
               var user = response.data;
               var id = user['id'];

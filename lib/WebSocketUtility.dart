@@ -4,8 +4,8 @@ import 'dart:convert';
 import 'package:web_socket_channel/io.dart';
 
 /// WebSocket地址
-// const String _SOCKET_URL = 'ws://localhost:80';
-const String _SOCKET_URL = 'ws://47.107.178.147:81';
+const String _SOCKET_URL = 'ws://localhost:80';
+// const String _SOCKET_URL = 'ws://47.107.178.147:81';
 
 /// WebSocket状态
 enum SocketStatus {

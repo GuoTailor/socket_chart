@@ -10,11 +10,13 @@ class Const {
   static const primaryColor = Color(0xff203152);
   static const greyColor = Color(0xffaeaeae);
   static const greyColor2 = Color(0xff12b7f5);
+  //static const baseUrl = "http://47.107.178.147:81";
+  static const baseUrl = "http://localhost:80";
 }
 
+
 final BaseOptions options = BaseOptions(
-  //baseUrl: "http://localhost:80",
-  baseUrl: "http://47.107.178.147:81",
+  baseUrl: Const.baseUrl,
   connectTimeout: 5000,
   receiveTimeout: 3000,
   receiveDataWhenStatusError: true,

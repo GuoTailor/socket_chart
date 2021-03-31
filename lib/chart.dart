@@ -35,7 +35,7 @@ class _ChartState extends State<Chart> {
   int roomId;
   var items = <dynamic>[];
   String title = "";
-  String peerAvatar = "http://localhost:80/pic1.jpg";
+  String peerAvatar = Const.baseUrl + "/pic1.jpg";
   SharedPreferences prefs;
 
   _ChartState(this.id);
@@ -69,7 +69,7 @@ class _ChartState extends State<Chart> {
     setState(() {
       this.index = index;
       roomId = items[index]['id'];
-      peerAvatar = "http://localhost:80/pic1.jpg";
+      peerAvatar = Const.baseUrl + "/pic1.jpg";
       title = items[index]['name'];
     });
   }
@@ -267,6 +267,15 @@ class ChatScreenState extends State<ChatScreen> {
           print("接受 " + data.toString());
           if (data['order'] == 0) {
             notifier.insert(widget.roomId, 0, Massage.fromJson(data['data']));
+          } else if (data['order'] == -10) {
+            WebSocketUtility().closeSocket();
+            Toast.show(context: context, message: data['data']['msg'] ?? "");
+            Navigator.pop(context);
+            Navigator.push(
+              context,
+              new MaterialPageRoute(
+                  builder: (context) => new MyApp()),
+            );
           }
         },
         onError: (e) {

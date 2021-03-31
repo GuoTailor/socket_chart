@@ -18,9 +18,9 @@ object SocketSessionStore {
         val old = userInfoMap.put(id, userInfo)
         logger.info("添加用户 $id ${session.getId()}")
         return if (old != null) {
-            logger.info("用户多地登陆 $id")
+            logger.info("用户多地登陆 $id ${old.session.getId()}")
             old.session.send(ResponseInfo.ok<Unit>("用户账号在其他地方登陆"), NotifyOrder.differentPlaceLogin)
-                .flatMap { old.session.connectionClosed() }.map { Unit }
+                .flatMap { old.session.connectionClosed() }.map { Unit }.log()
         } else Mono.just(Unit)
     }
 

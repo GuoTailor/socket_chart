@@ -15,8 +15,10 @@ import java.nio.channels.ClosedChannelException
 import java.time.Duration
 import java.time.LocalDateTime
 import java.time.ZoneId
+import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicInteger
+import java.util.function.Consumer
 
 /**
  * Created by gyh on 2020/4/7.
@@ -25,7 +27,6 @@ class WebSocketSessionHandler {
     private val logger = LoggerFactory.getLogger(this.javaClass)
     private val receiveProcessor: Sinks.Many<String>
     private val connectedProcessor: Sinks.One<WebSocketSession>
-    private val disconnectedProcessor: Sinks.One<WebSocketSession>
     private val json = jacksonObjectMapper()
     private var webSocketConnected = false
     private val session: WebSocketSession
@@ -33,13 +34,13 @@ class WebSocketSessionHandler {
     private val responseMap = ConcurrentHashMap<Int, SendInfo>()
     private var retryCount = 3
     private var retryTimeout = 1L
+    private var disconnectedProcessor: Consumer<WebSocketSession>? = null
 
     constructor(session: WebSocketSession) : this(50, session)
 
     constructor(historySize: Int, session: WebSocketSession) {
         receiveProcessor = Sinks.many().replay().limit(historySize)
         connectedProcessor = Sinks.one()
-        disconnectedProcessor = Sinks.one()
         webSocketConnected = true
         val javaTimeModule = JavaTimeModule()
         javaTimeModule.addSerializer(LocalDateTime::class.java, object : JsonSerializer<LocalDateTime>() {
@@ -54,22 +55,26 @@ class WebSocketSessionHandler {
 
     fun handle(): Mono<Void> {
         return session.receive()
-                .map { obj -> obj.payloadAsText }
-                .doOnNext { t -> receiveProcessor.tryEmitNext(t) }
-                .doOnComplete { connectionClosed().subscribe() }
-                .doOnCancel { connectionClosed().subscribe() }
-                .doOnRequest {
-                    webSocketConnected = true
-                    connectedProcessor.tryEmitValue(session)
-                }.then()
+            .map { obj -> obj.payloadAsText }
+            .doOnNext { t -> receiveProcessor.tryEmitNext(t) }
+            //.doOnComplete { connectionClosed().subscribe() }
+            //.doOnCancel { connectionClosed().subscribe() }
+            .doOnDiscard(Objects::class.java) { println("doOnDiscard " + it) }
+            .doOnTerminate { connectionClosed().subscribe() }
+            .doOnRequest {
+                webSocketConnected = true
+                connectedProcessor.tryEmitValue(session)
+            }.then()
     }
 
     fun connected(): Mono<WebSocketSession> {
         return connectedProcessor.asMono()
-                .doOnError { logger.info("错误 {}", it.message) }
+            .doOnError { logger.info("错误 {}", it.message) }
     }
 
-    fun disconnected(): Mono<WebSocketSession> = disconnectedProcessor.asMono()
+    fun disconnected(disconnectedProcessor: Consumer<WebSocketSession>) {
+        this.disconnectedProcessor = disconnectedProcessor
+    }
 
     fun isConnected(): Boolean = webSocketConnected
 
@@ -82,10 +87,10 @@ class WebSocketSessionHandler {
     fun send(message: String): Mono<String> {
         return if (webSocketConnected) {
             session.send(Mono.just(session.textMessage(message)))
-                    .onErrorResume(ClosedChannelException::class.java) { connectionClosed() }
-                    .onErrorResume(AbortedException::class.java) { connectionClosed() }
-                    .doOnError { logger.info("send error ${it.message}") }
-                    .then(Mono.just(message))
+                .onErrorResume(ClosedChannelException::class.java) { connectionClosed() }
+                .onErrorResume(AbortedException::class.java) { connectionClosed() }
+                .doOnError { logger.info("send error ${it.message}") }
+                .then(Mono.just(message))
         } else Mono.empty()
     }
 
@@ -93,11 +98,11 @@ class WebSocketSessionHandler {
         if (confirm) {
             val processor = Sinks.many().multicast().onBackpressureBuffer<Int>(8)
             val cycle = Flux.interval(Duration.ofSeconds(retryTimeout), Schedulers.boundedElastic())
-                    .map {
-                        if (it > retryCount) reqIncrement(req)
-                        processor.tryEmitNext(it.toInt() + 1)
-                        it
-                    }.subscribe()
+                .map {
+                    if (it > retryCount) reqIncrement(req)
+                    processor.tryEmitNext(it.toInt() + 1)
+                    it
+                }.subscribe()
             val info = SendInfo(req, processor, cycle)
             responseMap[req] = info
             processor.tryEmitNext(0)
@@ -130,10 +135,8 @@ class WebSocketSessionHandler {
     fun connectionClosed(): Mono<Void> {
         webSocketConnected = false
         receiveProcessor.tryEmitComplete()
-        val result = disconnectedProcessor.tryEmitValue(session).isSuccess
-        println(result)
+        disconnectedProcessor?.accept(session)
         return session.close()
-
     }
 
     fun reqIncrement(req: Int) {
@@ -147,9 +150,10 @@ class WebSocketSessionHandler {
         }
     }
 
-    data class SendInfo(val req: Int,
-                        val processor: Sinks.Many<Int>,
-                        val cycle: Disposable,
-                        var ack: Boolean = false
+    data class SendInfo(
+        val req: Int,
+        val processor: Sinks.Many<Int>,
+        val cycle: Disposable,
+        var ack: Boolean = false
     )
 }

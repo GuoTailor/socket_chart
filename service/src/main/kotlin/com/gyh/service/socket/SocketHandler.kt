@@ -51,7 +51,7 @@ abstract class SocketHandler : WebSocketHandler {
         val queryMap = Util.getQueryMap(sessionHandler.getSession().handshakeInfo.uri.query)
         val connect = sessionHandler.connected().flatMap { onConnect(queryMap, sessionHandler) }
             .flatMap { sessionHandler.send(ResponseInfo.ok<Unit>("连接成功"), NotifyOrder.connectSucceed, true) }
-        val disconnected = sessionHandler.disconnected().flatMap { onDisconnected(queryMap, sessionHandler) }
+        sessionHandler.disconnected{ onDisconnected(queryMap, sessionHandler) }
         val output = sessionHandler.receive()
             .map(::toServiceRequestInfo)
             .map(::printLog)
@@ -76,7 +76,6 @@ abstract class SocketHandler : WebSocketHandler {
             .zipWith(connect)
             .zipWith(watchDog)
             .zipWith(output)
-            .zipWith(disconnected)
             .then()
     }
 
@@ -90,7 +89,7 @@ abstract class SocketHandler : WebSocketHandler {
     /**
      * 当socket断开连接时
      */
-    abstract fun onDisconnected(queryMap: Map<String, String>, sessionHandler: WebSocketSessionHandler): Mono<*>
+    abstract fun onDisconnected(queryMap: Map<String, String>, sessionHandler: WebSocketSessionHandler)
 
     private fun toServiceRequestInfo(data: String): ServiceRequestInfo {
         // TODO 经测试正则表达式比jackson反序列化慢

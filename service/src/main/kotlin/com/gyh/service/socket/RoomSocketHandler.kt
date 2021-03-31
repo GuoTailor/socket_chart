@@ -48,10 +48,9 @@ class RoomSocketHandler : SocketHandler() {
 
     }
 
-    override fun onDisconnected(queryMap: Map<String, String>, sessionHandler: WebSocketSessionHandler): Mono<*> {
+    override fun onDisconnected(queryMap: Map<String, String>, sessionHandler: WebSocketSessionHandler) {
         val id = queryMap["id"]?.toInt()
         SocketSessionStore.removeUser(id)
-        return Mono.empty<Unit>()
     }
 
 }
