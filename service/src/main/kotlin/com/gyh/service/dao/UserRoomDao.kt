@@ -1,9 +1,7 @@
 package com.gyh.service.dao
 
-import com.gyh.service.entity.Room
 import com.gyh.service.entity.UserRoom
 import kotlinx.coroutines.flow.Flow
-import org.springframework.data.r2dbc.repository.Query
 import org.springframework.data.repository.kotlin.CoroutineCrudRepository
 
 /**

@@ -124,10 +124,7 @@ class _ChartState extends State<Chart> {
                       break;
                     case 'B':
                       var result = await dio.get("/room/remove",
-                          queryParameters: {
-                            "userId": id,
-                            "roomId": roomId
-                          });
+                          queryParameters: {"userId": id, "roomId": roomId});
                       if (result.statusCode == 200) {
                         setState(() {
                           index--;
@@ -161,7 +158,8 @@ class _ChartState extends State<Chart> {
                         behavior: HitTestBehavior.opaque,
                         onPointerDown: (event) async {
                           if (event.buttons == 2) {
-                            await EliminateRoomDialog().show(context, id, roomId);
+                            await EliminateRoomDialog()
+                                .show(context, id, roomId);
                             getAllRoom();
                           }
                         },
@@ -169,13 +167,14 @@ class _ChartState extends State<Chart> {
                           onTap: () {
                             onTop(index);
                           },
-                          tileColor: index == this.index ? Color(0xffe8e8e8) : null,
+                          tileColor:
+                              index == this.index ? Color(0xffe8e8e8) : null,
                           title: Text(
                             '${items[index]['name']}',
-                            style: TextStyle(fontSize: 20.0, fontFamily: 'Roboto'),
+                            style:
+                                TextStyle(fontSize: 20.0, fontFamily: 'Roboto'),
                           ),
-                        )
-                    );
+                        ));
                   },
                   separatorBuilder: (context, index) {
                     return Divider();
@@ -273,8 +272,7 @@ class ChatScreenState extends State<ChatScreen> {
             Navigator.pop(context);
             Navigator.push(
               context,
-              new MaterialPageRoute(
-                  builder: (context) => new MyApp()),
+              new MaterialPageRoute(builder: (context) => new MyApp()),
             );
           }
         },
@@ -310,26 +308,16 @@ class ChatScreenState extends State<ChatScreen> {
 
   Widget buildItem(int index, Massage message) {
     bool isLeft = isMessageLeft(index);
-    var avatar = Material(
-      child: CachedNetworkImage(
-        placeholder: (context, url) => Container(
-          child: CircularProgressIndicator(
-            strokeWidth: 1.0,
-            valueColor: AlwaysStoppedAnimation<Color>(Const.themeColor),
-          ),
-          width: 35.0,
-          height: 35.0,
-          padding: EdgeInsets.all(10.0),
+    var avatar = Container(
+      child: Text(
+        username,
+        style: TextStyle(
+          color: Const.primaryColor,
+          fontSize: 16.0,
         ),
-        imageUrl: widget.peerAvatar,
-        width: 35.0,
-        height: 35.0,
-        fit: BoxFit.cover,
       ),
-      borderRadius: BorderRadius.all(
-        Radius.circular(18.0),
-      ),
-      clipBehavior: Clip.hardEdge,
+      padding: EdgeInsets.all(10.0),
+      color: Color(0xffe8e8e8),
     );
     var content = message.msgType == 0
         ? Container(
@@ -407,17 +395,20 @@ class ChatScreenState extends State<ChatScreen> {
       child: Column(
         children: [
           isLeft
-              ? Row(
+              ? Column(
                   children: [
                     avatar,
                     content,
                   ],
                   mainAxisAlignment: MainAxisAlignment.start,
                 )
-              : Row(children: [
-                  content,
-                  avatar,
-                ], mainAxisAlignment: MainAxisAlignment.end),
+              : Column(
+                  children: [
+                      avatar,
+                      content,
+                    ],
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  crossAxisAlignment: CrossAxisAlignment.end),
           time
         ],
         crossAxisAlignment:

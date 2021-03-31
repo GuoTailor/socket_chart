@@ -12,7 +12,7 @@
  Target Server Version : 120002
  File Encoding         : 65001
 
- Date: 29/03/2021 00:22:15
+ Date: 01/04/2021 00:36:30
 */
 
 
@@ -21,6 +21,17 @@
 -- ----------------------------
 DROP SEQUENCE IF EXISTS "public"."sc_room_id_seq";
 CREATE SEQUENCE "public"."sc_room_id_seq" 
+INCREMENT 1
+MINVALUE  1
+MAXVALUE 2147483647
+START 1
+CACHE 1;
+
+-- ----------------------------
+-- Sequence structure for sc_room_message_id_seq
+-- ----------------------------
+DROP SEQUENCE IF EXISTS "public"."sc_room_message_id_seq";
+CREATE SEQUENCE "public"."sc_room_message_id_seq" 
 INCREMENT 1
 MINVALUE  1
 MAXVALUE 2147483647
@@ -65,6 +76,21 @@ COMMENT ON COLUMN "public"."sc_room"."create_time" IS '创建时间';
 COMMENT ON COLUMN "public"."sc_room"."name" IS '房间名';
 
 -- ----------------------------
+-- Table structure for sc_room_message
+-- ----------------------------
+DROP TABLE IF EXISTS "public"."sc_room_message";
+CREATE TABLE "public"."sc_room_message" (
+  "id" int4 NOT NULL DEFAULT nextval('sc_room_message_id_seq'::regclass),
+  "room_id" int4 NOT NULL,
+  "useer_id" int4 NOT NULL,
+  "message" varchar(255) COLLATE "pg_catalog"."default"
+)
+;
+COMMENT ON COLUMN "public"."sc_room_message"."room_id" IS '房间id';
+COMMENT ON COLUMN "public"."sc_room_message"."useer_id" IS '用户id';
+COMMENT ON COLUMN "public"."sc_room_message"."message" IS '消息';
+
+-- ----------------------------
 -- Table structure for sc_user
 -- ----------------------------
 DROP TABLE IF EXISTS "public"."sc_user";
@@ -99,9 +125,16 @@ SELECT setval('"public"."sc_room_id_seq"', 32, true);
 -- ----------------------------
 -- Alter sequences owned by
 -- ----------------------------
+ALTER SEQUENCE "public"."sc_room_message_id_seq"
+OWNED BY "public"."sc_room_message"."id";
+SELECT setval('"public"."sc_room_message_id_seq"', 2, false);
+
+-- ----------------------------
+-- Alter sequences owned by
+-- ----------------------------
 ALTER SEQUENCE "public"."sc_user_room_id_seq"
 OWNED BY "public"."sc_user_room"."id";
-SELECT setval('"public"."sc_user_room_id_seq"', 27, true);
+SELECT setval('"public"."sc_user_room_id_seq"', 28, true);
 
 -- ----------------------------
 -- Alter sequences owned by
@@ -123,6 +156,11 @@ CREATE UNIQUE INDEX "sc_room_name_idx" ON "public"."sc_room" USING btree (
 ALTER TABLE "public"."sc_room" ADD CONSTRAINT "sc_room_pkey" PRIMARY KEY ("id");
 
 -- ----------------------------
+-- Primary Key structure for table sc_room_message
+-- ----------------------------
+ALTER TABLE "public"."sc_room_message" ADD CONSTRAINT "sc_room_message_pkey" PRIMARY KEY ("id");
+
+-- ----------------------------
 -- Indexes structure for table sc_user
 -- ----------------------------
 CREATE UNIQUE INDEX "user_username_idx" ON "public"."sc_user" USING btree (
@@ -138,6 +176,12 @@ ALTER TABLE "public"."sc_user" ADD CONSTRAINT "user_pkey" PRIMARY KEY ("id");
 -- Primary Key structure for table sc_user_room
 -- ----------------------------
 ALTER TABLE "public"."sc_user_room" ADD CONSTRAINT "sc_user_room_pkey" PRIMARY KEY ("id");
+
+-- ----------------------------
+-- Foreign Keys structure for table sc_room_message
+-- ----------------------------
+ALTER TABLE "public"."sc_room_message" ADD CONSTRAINT "sc_room_message_room_id_fkey" FOREIGN KEY ("room_id") REFERENCES "public"."sc_room" ("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "public"."sc_room_message" ADD CONSTRAINT "sc_room_message_useer_id_fkey" FOREIGN KEY ("useer_id") REFERENCES "public"."sc_user" ("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- ----------------------------
 -- Foreign Keys structure for table sc_user_room
