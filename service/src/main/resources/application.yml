@@ -4,7 +4,7 @@ server:
 spring:
   r2dbc:
     username: postgres
-    password: admin
+    password: root
     url: r2dbc:postgres://localhost:5432/socket_chart
     pool:
       enabled: true

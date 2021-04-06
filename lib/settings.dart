@@ -3,8 +3,8 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
-//import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:socket_chart/const.dart';
 
@@ -68,7 +68,26 @@ class SettingsScreenState extends State<SettingsScreen> {
     setState(() {});
   }
 
-  Future getImage() async {/*
+  Future getImage() async {
+    print("nmka");
+    final XTypeGroup typeGroup = XTypeGroup(
+      label: 'images',
+      extensions: ['jpg', 'png'],
+    );
+    final List<XFile> files = await openFiles(acceptedTypeGroups: [typeGroup]);
+    if (files.isEmpty) {
+      // Operation was canceled by the user.
+      return;
+    }
+    final XFile file = files[0];
+    final String fileName = file.name;
+    final String filePath = file.path;
+    print(fileName);
+    print(filePath);
+    setState(() {
+      avatarImageFile = File(filePath);
+    });
+    /*
     ImagePicker imagePicker = ImagePicker();
     PickedFile pickedFile;
 

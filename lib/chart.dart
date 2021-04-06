@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:dash_chat/dash_chat.dart';
+import 'package:date_format/date_format.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -10,6 +10,7 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:socket_chart/add_room.dart';
 import 'package:socket_chart/msg_model.dart';
+import 'package:socket_chart/widgets/split.dart';
 
 import 'WebSocketUtility.dart';
 import 'const.dart';
@@ -148,40 +149,47 @@ class _ChartState extends State<Chart> {
               ),
             ],
           ),
-          body: Row(children: [
-            Container(
-                width: 280,
-                child: ListView.separated(
-                  itemCount: items.length,
-                  itemBuilder: (context, index) {
-                    return Listener(
-                        behavior: HitTestBehavior.opaque,
-                        onPointerDown: (event) async {
-                          if (event.buttons == 2) {
-                            await EliminateRoomDialog()
-                                .show(context, id, roomId);
-                            getAllRoom();
-                          }
-                        },
-                        child: ListTile(
-                          onTap: () {
-                            onTop(index);
-                          },
-                          tileColor:
+          body: Split(
+            axis: Axis.horizontal,
+            initialFirstFraction: 0.2,
+            firstChild: Scrollbar(
+              child: Container(
+                    width: 280,
+                    child: ListView.separated(
+                      itemCount: items.length,
+                      itemBuilder: (context, index) {
+                        return Listener(
+                            behavior: HitTestBehavior.opaque,
+                            onPointerDown: (event) async {
+                              if (event.buttons == 2) {
+                                await EliminateRoomDialog()
+                                    .show(context, id, roomId);
+                                getAllRoom();
+                              }
+                            },
+                            child: ListTile(
+                              onTap: () {
+                                onTop(index);
+                              },
+                              tileColor:
                               index == this.index ? Color(0xffe8e8e8) : null,
-                          title: Text(
-                            '${items[index]['name']}',
-                            style:
+                              title: Text(
+                                '${items[index]['name']}',
+                                style:
                                 TextStyle(fontSize: 20.0, fontFamily: 'Roboto'),
-                          ),
-                        ));
-                  },
-                  separatorBuilder: (context, index) {
-                    return Divider();
-                  },
-                )),
-            ChatScreen(roomId: roomId, peerAvatar: peerAvatar)
-          ])),
+                              ),
+                            ));
+                      },
+                      separatorBuilder: (context, index) {
+                        return Divider();
+                      },
+                    )),
+            ),
+            secondChild: Center(
+              child: ChatScreen(roomId: roomId, peerAvatar: peerAvatar),
+            ),
+          ),
+      )
     );
 
     return list;
@@ -326,7 +334,6 @@ class ChatScreenState extends State<ChatScreen> {
               style: TextStyle(color: Colors.white),
             ),
             padding: EdgeInsets.fromLTRB(15.0, 10.0, 15.0, 10.0),
-            width: 200.0,
             decoration: BoxDecoration(
                 color: isLeft ? Const.primaryColor : Const.greyColor2,
                 borderRadius: BorderRadius.circular(8.0)),
@@ -341,7 +348,6 @@ class ChatScreenState extends State<ChatScreen> {
                       valueColor:
                           AlwaysStoppedAnimation<Color>(Const.themeColor),
                     ),
-                    width: 200.0,
                     height: 200.0,
                     padding: EdgeInsets.all(70.0),
                     decoration: BoxDecoration(
@@ -354,7 +360,6 @@ class ChatScreenState extends State<ChatScreen> {
                   errorWidget: (context, url, error) => Material(
                     child: Image.asset(
                       'images/img_not_available.jpeg',
-                      width: 200.0,
                       height: 200.0,
                       fit: BoxFit.cover,
                     ),
@@ -364,7 +369,6 @@ class ChatScreenState extends State<ChatScreen> {
                     clipBehavior: Clip.hardEdge,
                   ),
                   imageUrl: message.path,
-                  width: 200.0,
                   height: 200.0,
                   fit: BoxFit.cover,
                 ),
@@ -382,8 +386,7 @@ class ChatScreenState extends State<ChatScreen> {
           );
     var time = Container(
       child: Text(
-        DateFormat('M/dd kk:mm:ss')
-            .format(DateTime.fromMillisecondsSinceEpoch(message.date)),
+        formatDate(DateTime.fromMillisecondsSinceEpoch(message.date), [mm, "/", dd, " ", HH, ":", nn, ":", ss]),
         style: TextStyle(
             color: Const.greyColor,
             fontSize: 12.0,
@@ -441,7 +444,6 @@ class ChatScreenState extends State<ChatScreen> {
         ],
         child: Container(
           color: Color(0xffe8e8e8),
-          width: 984,
           child: Stack(
             children: <Widget>[
               Column(
