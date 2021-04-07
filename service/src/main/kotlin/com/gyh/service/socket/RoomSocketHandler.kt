@@ -37,6 +37,7 @@ class RoomSocketHandler : SocketHandler() {
     override fun doDispatch(requestInfo: ServiceRequestInfo, responseInfo: ServiceResponseInfo) {
         val msg = json.readValue(requestInfo.body, Message::class.java)
         logger.info(msg.toString())
+        logger.info("" + SocketSessionStore.userInfoMap.size)
         SocketSessionStore.userInfoMap.entries.forEach {
             val socketInfo = it.value
             val id = socketInfo.userId
@@ -44,8 +45,6 @@ class RoomSocketHandler : SocketHandler() {
                 socketInfo.session.send(ServiceResponseInfo.DataResponse(msg, null, NotifyOrder.requestReq)).subscribe()
             }
         }
-        val data = Date()
-
     }
 
     override fun onDisconnected(queryMap: Map<String, String>, sessionHandler: WebSocketSessionHandler) {

@@ -42,6 +42,19 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  msix: ^1.0.5
+
+msix_config:
+  display_name: MyApp
+  publisher_display_name: MyName
+  identity_name: MyCompany.MySuite.MyApp
+  msix_version: 1.0.0.0
+  certificate_password: 1234
+  icons_background_color: transparent
+  architecture: x64
+  capabilities: 'internetClient'
+
+
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

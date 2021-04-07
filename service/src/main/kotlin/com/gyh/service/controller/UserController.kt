@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.*
 import reactor.core.publisher.Mono
 import java.io.File
 import java.io.IOException
+import java.net.URLDecoder
 import java.util.*
 
 
@@ -38,25 +39,13 @@ class UserController {
     }
 
     @PostMapping("/upload")
-    fun requestBodyFlux(@RequestPart("file") filePart: FilePart): Mono<String>? {
-        println(filePart.filename())
-        val fileName = UUID.randomUUID().toString() + filePart
-        val file = File("file/")
+    fun requestBodyFlux(@RequestPart("file") filePart: FilePart): Mono<String> {
+        val fileName = UUID.randomUUID().toString() + URLDecoder.decode(filePart.filename(), Charsets.UTF_8)
+        val file = File("file/$fileName")
         if (!file.parentFile.exists()) {
-            file.parentFile.mkdirs();  //新建文件夹
+            file.parentFile.mkdirs()  //新建文件夹
         }
-        return filePart.transferTo(file).map { filePart.filename() }
-    }
-
-    @GetMapping("/download")
-    @Throws(IOException::class)
-    fun downloadByWriteWith(response: ServerHttpResponse): Mono<Void?>? {
-        val zeroCopyResponse = response as ZeroCopyHttpOutputMessage
-        response.getHeaders().set(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=parallel.png")
-        response.getHeaders().setContentType(MediaType.IMAGE_PNG)
-        val resource: Resource = ClassPathResource("parallel.png")
-        val file: File = resource.getFile()
-        return zeroCopyResponse.writeWith(file, 0, file.length())
+        return filePart.transferTo(file).thenReturn(fileName)
     }
 
 }

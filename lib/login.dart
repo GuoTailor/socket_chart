@@ -4,7 +4,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:socket_chart/settings.dart';
+import 'package:socket_chart/register.dart';
 
 import 'chart.dart';
 import 'const.dart';
@@ -146,8 +146,9 @@ class _MyStatefulWidgetState extends State<MyStatefulWidget> {
                 isLoading = false;
                 info = "登录成功";
               });
-              prefs.setInt('id', id);
-              prefs.setString("username", user['username']);
+              prefs.setInt(Const.id, id);
+              prefs.setString(Const.username, user['username']);
+              prefs.setString(Const.avatarUrl, user['avatarUrl']);
               Navigator.pop(context);
               Navigator.push(
                 context,
@@ -165,9 +166,6 @@ class _MyStatefulWidgetState extends State<MyStatefulWidget> {
         ),
         ElevatedButton(
           onPressed: () {
-            setState(() {
-              isLoading = true;
-            });
             Navigator.push(
               context,
               new MaterialPageRoute(builder: (context) => new ChatSettings()),

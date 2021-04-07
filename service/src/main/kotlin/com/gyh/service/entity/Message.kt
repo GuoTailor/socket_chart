@@ -10,6 +10,8 @@ data class Message(
     val msgType: Int,
     val content: String,
     val path: String,
+    val name: String,
+    val avatar: String,
     val roomId: Int,
     val date: LocalDateTime
 )

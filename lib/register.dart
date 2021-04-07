@@ -44,6 +44,7 @@ class SettingsScreenState extends State<SettingsScreen> {
 
   bool isLoading = false;
   File avatarImageFile;
+  String avatarUrl;
 
   final FocusNode focusNodeNickname = FocusNode();
   final FocusNode focusNodeAboutMe = FocusNode();
@@ -56,10 +57,11 @@ class SettingsScreenState extends State<SettingsScreen> {
 
   void readLocal() async {
     prefs = await SharedPreferences.getInstance();
-    id = prefs.getInt('id') ?? -1;
-    username = prefs.getString('nickname') ?? '';
+    id = prefs.getInt(Const.id) ?? -1;
+    username = prefs.getString(Const.username) ?? '';
     password = prefs.getString('aboutMe') ?? '';
-    photoUrl = prefs.getString('photoUrl') ?? '';
+    avatarUrl = prefs.getString(Const.avatarUrl);
+    photoUrl = Const.baseUrl + "/" + prefs.getString(Const.avatarUrl) ?? '';
 
     controllerNickname = TextEditingController(text: username);
     controllerAboutMe = TextEditingController(text: password);
@@ -68,43 +70,32 @@ class SettingsScreenState extends State<SettingsScreen> {
     setState(() {});
   }
 
-  Future getImage() async {
-    print("nmka");
-    final XTypeGroup typeGroup = XTypeGroup(
-      label: 'images',
-      extensions: ['jpg', 'png'],
-    );
-    final List<XFile> files = await openFiles(acceptedTypeGroups: [typeGroup]);
-    if (files.isEmpty) {
-      // Operation was canceled by the user.
-      return;
-    }
-    final XFile file = files[0];
-    final String fileName = file.name;
+  Future uploadImage() async {
+    XFile file = await getImage();
     final String filePath = file.path;
-    print(fileName);
-    print(filePath);
     setState(() {
-      avatarImageFile = File(filePath);
+      isLoading = true;
     });
-    /*
-    ImagePicker imagePicker = ImagePicker();
-    PickedFile pickedFile;
-
-    pickedFile = await imagePicker.getImage(source: ImageSource.gallery);
-
-    File image = File(pickedFile.path);
-
-    if (image != null) {
+    var result = await uploadFile(file);
+    if (result.statusCode == 200) {
       setState(() {
-        avatarImageFile = image;
-        isLoading = true;
+        avatarUrl = result.data;
+        avatarImageFile = File(filePath);
+        isLoading = false;
       });
-    }*/
-    //uploadFile();
+    } else {
+      setState(() {
+        isLoading = false;
+      });
+      Toast.show(context: context, message: "失败");
+    }
   }
 
   Future<void> handleUpdateData() async {
+    if(avatarUrl == null || avatarUrl.isEmpty) {
+      Toast.show(context: context, message: "头像不能为空");
+      return;
+    }
     focusNodeNickname.unfocus();
     focusNodeAboutMe.unfocus();
 
@@ -112,6 +103,7 @@ class SettingsScreenState extends State<SettingsScreen> {
       isLoading = true;
     });
     var result = await dio.post("/user/register", data: jsonEncode(<String, String>{
+      'avatarUrl': avatarUrl,
       'username': username,
       'password': password
     }));
@@ -190,7 +182,7 @@ class SettingsScreenState extends State<SettingsScreen> {
                           Icons.camera_alt,
                           color: Const.primaryColor.withOpacity(0.5),
                         ),
-                        onPressed: getImage,
+                        onPressed: uploadImage,
                         padding: EdgeInsets.all(30.0),
                         splashColor: Colors.transparent,
                         highlightColor: Const.greyColor,

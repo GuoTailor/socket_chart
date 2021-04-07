@@ -3,6 +3,8 @@ import 'dart:io';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:date_format/date_format.dart';
+import 'package:dio/dio.dart';
+import 'package:file_selector/file_selector.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -36,7 +38,6 @@ class _ChartState extends State<Chart> {
   int roomId;
   var items = <dynamic>[];
   String title = "";
-  String peerAvatar = Const.baseUrl + "/pic1.jpg";
   SharedPreferences prefs;
 
   _ChartState(this.id);
@@ -60,8 +61,10 @@ class _ChartState extends State<Chart> {
       print(result);
       setState(() {
         items = result;
-        roomId = result[index]['id'];
-        title = result[index]['name'];
+        if (items.isNotEmpty) {
+          roomId = result[index]['id'];
+          title = result[index]['name'];
+        }
       });
     }
   }
@@ -70,7 +73,6 @@ class _ChartState extends State<Chart> {
     setState(() {
       this.index = index;
       roomId = items[index]['id'];
-      peerAvatar = Const.baseUrl + "/pic1.jpg";
       title = items[index]['name'];
     });
   }
@@ -89,13 +91,13 @@ class _ChartState extends State<Chart> {
 
   Widget listView() {
     var list = MaterialApp(
-      theme: new ThemeData(
-        brightness: Brightness.light,
-        primaryColor: Colors.white,
-        buttonColor: Color(0xffe0e0e0),
-      ),
-      debugShowCheckedModeBanner: false,
-      home: Scaffold(
+        theme: new ThemeData(
+          brightness: Brightness.light,
+          primaryColor: Colors.white,
+          buttonColor: Color(0xffe0e0e0),
+        ),
+        debugShowCheckedModeBanner: false,
+        home: Scaffold(
           appBar: new AppBar(
             title: new Text(title),
             leading: IconButton(
@@ -154,43 +156,45 @@ class _ChartState extends State<Chart> {
             initialFirstFraction: 0.2,
             firstChild: Scrollbar(
               child: Container(
-                    width: 280,
-                    child: ListView.separated(
-                      itemCount: items.length,
-                      itemBuilder: (context, index) {
-                        return Listener(
-                            behavior: HitTestBehavior.opaque,
-                            onPointerDown: (event) async {
-                              if (event.buttons == 2) {
-                                await EliminateRoomDialog()
-                                    .show(context, id, roomId);
-                                getAllRoom();
-                              }
-                            },
-                            child: ListTile(
-                              onTap: () {
-                                onTop(index);
-                              },
-                              tileColor:
-                              index == this.index ? Color(0xffe8e8e8) : null,
-                              title: Text(
-                                '${items[index]['name']}',
-                                style:
-                                TextStyle(fontSize: 20.0, fontFamily: 'Roboto'),
-                              ),
-                            ));
-                      },
-                      separatorBuilder: (context, index) {
-                        return Divider();
-                      },
-                    )),
+                  width: 280,
+                  child: (items == null || items.isEmpty)
+                      ? Center(child: Text('请先加入房间'))
+                      : ListView.separated(
+                          itemCount: items.length,
+                          itemBuilder: (context, index) {
+                            return Listener(
+                                behavior: HitTestBehavior.opaque,
+                                onPointerDown: (event) async {
+                                  if (event.buttons == 2) {
+                                    await EliminateRoomDialog()
+                                        .show(context, id, roomId);
+                                    getAllRoom();
+                                  }
+                                },
+                                child: ListTile(
+                                  onTap: () {
+                                    onTop(index);
+                                  },
+                                  tileColor: index == this.index
+                                      ? Color(0xffe8e8e8)
+                                      : null,
+                                  title: Text(
+                                    '${items[index]['name']}',
+                                    style: TextStyle(
+                                        fontSize: 20.0, fontFamily: 'Roboto'),
+                                  ),
+                                ));
+                          },
+                          separatorBuilder: (context, index) {
+                            return Divider();
+                          },
+                        )),
             ),
             secondChild: Center(
-              child: ChatScreen(roomId: roomId, peerAvatar: peerAvatar),
+              child: ChatScreen(roomId: roomId),
             ),
           ),
-      )
-    );
+        ));
 
     return list;
   }
@@ -198,10 +202,8 @@ class _ChartState extends State<Chart> {
 
 class ChatScreen extends StatefulWidget {
   final int roomId;
-  final String peerAvatar;
 
-  ChatScreen({Key key, @required this.roomId, @required this.peerAvatar})
-      : super(key: key);
+  ChatScreen({Key key, @required this.roomId}) : super(key: key);
 
   @override
   State createState() {
@@ -214,6 +216,7 @@ class ChatScreenState extends State<ChatScreen> {
 
   int id;
   String username;
+  String avatarUrl;
 
   int _limit = 20;
   final int _limitIncrement = 20;
@@ -221,7 +224,6 @@ class ChatScreenState extends State<ChatScreen> {
 
   File imageFile;
   bool isLoading;
-  String imageUrl;
   bool isConnect = false;
   WebSocketUtility channel = WebSocketUtility();
   MsgNotifier notifier = MsgNotifier();
@@ -253,7 +255,6 @@ class ChatScreenState extends State<ChatScreen> {
     super.initState();
     listScrollController.addListener(_scrollListener);
     isLoading = false;
-    imageUrl = '';
     readLocal();
   }
 
@@ -261,6 +262,7 @@ class ChatScreenState extends State<ChatScreen> {
     prefs = await SharedPreferences.getInstance();
     id = prefs.getInt(Const.id) ?? -1;
     username = prefs.getString(Const.username);
+    avatarUrl = Const.baseUrl + "/" + prefs.getString(Const.avatarUrl);
     print(id);
 
     channel.initWebSocket(
@@ -273,7 +275,8 @@ class ChatScreenState extends State<ChatScreen> {
         onMessage: (data) {
           print("接受 " + data.toString());
           if (data['order'] == 0) {
-            notifier.insert(widget.roomId, 0, Massage.fromJson(data['data']));
+            var msg = Massage.fromJson(data['data']);
+            notifier.insert(msg.roomId, 0, msg);
           } else if (data['order'] == -10) {
             WebSocketUtility().closeSocket();
             Toast.show(context: context, message: data['data']['msg'] ?? "");
@@ -303,7 +306,7 @@ class ChatScreenState extends State<ChatScreen> {
     // type: 0 = text, 1 = image, 2 = sticker
     if (content != '') {
       textEditingController.clear();
-      var message = Massage(this.id, 0, content, '/msg', widget.roomId,
+      var message = Massage(this.id, type, content, '/msg', username, avatarUrl, widget.roomId,
           DateTime.now().millisecondsSinceEpoch);
 
       setState(() {
@@ -316,7 +319,30 @@ class ChatScreenState extends State<ChatScreen> {
 
   Widget buildItem(int index, Massage message) {
     bool isLeft = isMessageLeft(index);
-    var avatar = Container(
+    var avatarUrl = isLeft ? message.avatar : this.avatarUrl;
+    var username = isLeft ? message.name : this.username;
+    var avatar = Material(
+      child: CachedNetworkImage(
+        placeholder: (context, url) => Container(
+          child: CircularProgressIndicator(
+            strokeWidth: 1.0,
+            valueColor: AlwaysStoppedAnimation<Color>(Const.themeColor),
+          ),
+          width: 35.0,
+          height: 35.0,
+          padding: EdgeInsets.all(10.0),
+        ),
+        imageUrl: avatarUrl,
+        width: 35.0,
+        height: 35.0,
+        fit: BoxFit.cover,
+      ),
+      borderRadius: BorderRadius.all(
+        Radius.circular(18.0),
+      ),
+      clipBehavior: Clip.hardEdge,
+    );
+    var name = Container(
       child: Text(
         username,
         style: TextStyle(
@@ -331,9 +357,11 @@ class ChatScreenState extends State<ChatScreen> {
         ? Container(
             child: SelectableText(
               message.content,
+              textWidthBasis: TextWidthBasis.longestLine,
               style: TextStyle(color: Colors.white),
             ),
             padding: EdgeInsets.fromLTRB(15.0, 10.0, 15.0, 10.0),
+            width: 200.0,
             decoration: BoxDecoration(
                 color: isLeft ? Const.primaryColor : Const.greyColor2,
                 borderRadius: BorderRadius.circular(8.0)),
@@ -368,7 +396,7 @@ class ChatScreenState extends State<ChatScreen> {
                     ),
                     clipBehavior: Clip.hardEdge,
                   ),
-                  imageUrl: message.path,
+                  imageUrl: Const.baseUrl + "/" + message.content,
                   height: 200.0,
                   fit: BoxFit.cover,
                 ),
@@ -379,14 +407,16 @@ class ChatScreenState extends State<ChatScreen> {
                 Navigator.push(
                     context,
                     MaterialPageRoute(
-                        builder: (context) => FullPhoto(url: message.path)));
+                        builder: (context) => FullPhoto(
+                            url: Const.baseUrl + "/" + message.content)));
               },
             ),
             margin: EdgeInsets.only(left: 10.0, right: 10.0),
           );
     var time = Container(
       child: Text(
-        formatDate(DateTime.fromMillisecondsSinceEpoch(message.date), [mm, "/", dd, " ", HH, ":", nn, ":", ss]),
+        formatDate(DateTime.fromMillisecondsSinceEpoch(message.date),
+            [mm, "/", dd, " ", HH, ":", nn, ":", ss]),
         style: TextStyle(
             color: Const.greyColor,
             fontSize: 12.0,
@@ -400,18 +430,28 @@ class ChatScreenState extends State<ChatScreen> {
           isLeft
               ? Column(
                   children: [
-                    avatar,
-                    content,
+                    name,
+                    Row(
+                      children: [
+                        avatar,
+                        content,
+                      ],
+                    ),
                   ],
                   mainAxisAlignment: MainAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                 )
               : Column(
                   children: [
-                      avatar,
+                    name,
+                    Row(children: [
                       content,
-                    ],
+                      avatar,
+                    ], mainAxisAlignment: MainAxisAlignment.end),
+                  ],
                   mainAxisAlignment: MainAxisAlignment.end,
-                  crossAxisAlignment: CrossAxisAlignment.end),
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                ),
           time
         ],
         crossAxisAlignment:
@@ -492,16 +532,36 @@ class ChatScreenState extends State<ChatScreen> {
             ),
           ),
           // Button send message
-          Material(
-            child: Container(
-              margin: EdgeInsets.symmetric(horizontal: 8.0),
-              child: IconButton(
-                icon: Icon(Icons.send),
-                onPressed: () => onSendMessage(textEditingController.text, 0),
-                color: Const.primaryColor,
+          Column(
+            children: [
+              Material(
+                child: Container(
+                  margin: EdgeInsets.symmetric(horizontal: 8.0),
+                  child: IconButton(
+                    icon: Icon(Icons.send),
+                    onPressed: () =>
+                        onSendMessage(textEditingController.text, 0),
+                    color: Const.primaryColor,
+                  ),
+                ),
+                color: Colors.white,
               ),
-            ),
-            color: Colors.white,
+              Material(
+                child: IconButton(
+                    icon: Icon(Icons.image),
+                    onPressed: () async {
+                      XFile file = await getImage();
+                      if (file != null) {
+                        Response result = await uploadFile(file);
+                        if (result.statusCode == 200) {
+                          onSendMessage(result.data, 1);
+                        } else {
+                          Toast.show(context: context, message: "失败");
+                        }
+                      }
+                    }),
+              ),
+            ],
           ),
         ],
       ),

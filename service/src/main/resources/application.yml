@@ -8,7 +8,9 @@ spring:
     url: r2dbc:postgres://localhost:5432/socket_chart
     pool:
       enabled: true
-
+  web:
+    resources:
+      static-locations: file:file/, classpath:/static
 logging:
   level:
     io.r2dbc.postgresql.QUERY: DEBUG

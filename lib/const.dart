@@ -1,10 +1,13 @@
+import 'package:http_parser/http_parser.dart';
 import 'dart:ui';
 
 import 'package:dio/dio.dart';
+import 'package:file_selector/file_selector.dart';
 
 class Const {
   static const id = 'id';
   static const username = 'username';
+  static const avatarUrl = 'avatarUrl';
   static const search = 'search';
   static const themeColor = Color(0xfff5a623);
   static const primaryColor = Color(0xff203152);
@@ -25,3 +28,23 @@ final BaseOptions options = BaseOptions(
   },
 );
 final Dio dio = Dio(options);
+
+Future<XFile> getImage() async {
+  final XTypeGroup typeGroup = XTypeGroup(
+    label: 'images',
+    extensions: ['jpg', 'png'],
+  );
+  final List<XFile> files = await openFiles(acceptedTypeGroups: [typeGroup]);
+  if (files.isEmpty) {
+    // Operation was canceled by the user.
+    return null;
+  }
+  return files[0];
+}
+
+Future<Response<T>> uploadFile<T>(XFile file) async {
+  FormData formData = FormData.fromMap({
+    "file": await MultipartFile.fromFile(file.path, filename: Uri.encodeComponent(file.name)),
+  });
+  return dio.post("/user/upload", data: formData);
+}
