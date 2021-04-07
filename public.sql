@@ -3,16 +3,16 @@
 
  Source Server         : localhost_5432
  Source Server Type    : PostgreSQL
- Source Server Version : 120002
+ Source Server Version : 130002
  Source Host           : localhost:5432
  Source Catalog        : socket_chart
  Source Schema         : public
 
  Target Server Type    : PostgreSQL
- Target Server Version : 120002
+ Target Server Version : 130002
  File Encoding         : 65001
 
- Date: 01/04/2021 00:36:30
+ Date: 07/04/2021 17:52:22
 */
 
 
@@ -98,11 +98,13 @@ CREATE TABLE "public"."sc_user" (
   "id" int4 NOT NULL DEFAULT nextval('user_id_seq'::regclass),
   "username" varchar(255) COLLATE "pg_catalog"."default" NOT NULL,
   "password" varchar(255) COLLATE "pg_catalog"."default" NOT NULL,
-  "create_time" timestamp(6) NOT NULL DEFAULT now()
+  "create_time" timestamp(6) NOT NULL DEFAULT now(),
+  "avatar_url" varchar(255) COLLATE "pg_catalog"."default"
 )
 ;
 COMMENT ON COLUMN "public"."sc_user"."username" IS '用户名';
 COMMENT ON COLUMN "public"."sc_user"."password" IS '密码';
+COMMENT ON COLUMN "public"."sc_user"."avatar_url" IS '头像url';
 
 -- ----------------------------
 -- Table structure for sc_user_room
@@ -120,7 +122,7 @@ CREATE TABLE "public"."sc_user_room" (
 -- ----------------------------
 ALTER SEQUENCE "public"."sc_room_id_seq"
 OWNED BY "public"."sc_room"."id";
-SELECT setval('"public"."sc_room_id_seq"', 32, true);
+SELECT setval('"public"."sc_room_id_seq"', 36, true);
 
 -- ----------------------------
 -- Alter sequences owned by
@@ -134,14 +136,14 @@ SELECT setval('"public"."sc_room_message_id_seq"', 2, false);
 -- ----------------------------
 ALTER SEQUENCE "public"."sc_user_room_id_seq"
 OWNED BY "public"."sc_user_room"."id";
-SELECT setval('"public"."sc_user_room_id_seq"', 28, true);
+SELECT setval('"public"."sc_user_room_id_seq"', 39, true);
 
 -- ----------------------------
 -- Alter sequences owned by
 -- ----------------------------
 ALTER SEQUENCE "public"."user_id_seq"
 OWNED BY "public"."sc_user"."id";
-SELECT setval('"public"."user_id_seq"', 14, true);
+SELECT setval('"public"."user_id_seq"', 25, true);
 
 -- ----------------------------
 -- Indexes structure for table sc_room
