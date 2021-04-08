@@ -1,7 +1,9 @@
 package com.gyh.service.service
 
 import com.gyh.service.dao.RoomDao
+import com.gyh.service.dao.RoomMessageDao
 import com.gyh.service.dao.UserRoomDao
+import com.gyh.service.entity.Message
 import com.gyh.service.entity.Room
 import com.gyh.service.entity.UserRoom
 import kotlinx.coroutines.flow.Flow
@@ -9,12 +11,18 @@ import kotlinx.coroutines.flow.count
 import kotlinx.coroutines.flow.map
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.data.domain.PageRequest
+import org.springframework.data.domain.Pageable
+import org.springframework.data.domain.Slice
+import org.springframework.data.domain.Sort
 import org.springframework.data.r2dbc.core.R2dbcEntityTemplate
 import org.springframework.r2dbc.core.flow
 import org.springframework.stereotype.Service
 import reactor.core.publisher.Flux
+import reactor.core.publisher.Mono
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
+import javax.annotation.Resource
 
 /**
  * Created by gyh on 2021/1/8
@@ -22,11 +30,14 @@ import java.util.concurrent.ConcurrentHashMap
 @Service
 class RoomService {
     private val logger = LoggerFactory.getLogger(this.javaClass)
-    @Autowired
+    @Resource
     lateinit var roomDao: RoomDao
 
-    @Autowired
+    @Resource
     lateinit var userRoomDao: UserRoomDao
+
+    @Resource
+    lateinit var roomMessageDao: RoomMessageDao
 
     @Autowired
     lateinit var r2dbc: R2dbcEntityTemplate
@@ -53,10 +64,6 @@ class RoomService {
             }
     }
 
-    suspend fun findAll() {
-
-    }
-
     suspend fun joinRoom(userId: Int, roomId: Int): String {
         return if(userRoomDao.existsByUserIdAndRoomId(userId, roomId)) {
             "失败，已添加该房间"
@@ -80,4 +87,14 @@ class RoomService {
             print(it)
         }.count()
     }
+
+    fun addRoomMsg(msg: Message): Mono<Message> {
+        return roomMessageDao.save(msg)
+    }
+
+    fun findAllMsg(page: Int, size: Int, roomId: Int): Flux<Message> {
+        val pageable = PageRequest.of(page, size, Sort.by("date").descending())
+        return roomMessageDao.findAllByRoomId(roomId, pageable)
+    }
+
 }

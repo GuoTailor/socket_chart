@@ -60,7 +60,7 @@ abstract class SocketHandler : WebSocketHandler {
             .flatMap {
                 val resp = ServiceResponseInfo(req = it.req, order = NotifyOrder.requestReq)
                 doDispatch(it, resp)
-                resp.getMono()
+                    .flatMap { resp.getMono() }
             }.onErrorResume {
                 it.printStackTrace()
                 ServiceResponseInfo(
@@ -79,7 +79,7 @@ abstract class SocketHandler : WebSocketHandler {
             .then()
     }
 
-    abstract fun doDispatch(requestInfo: ServiceRequestInfo, responseInfo: ServiceResponseInfo)
+    abstract fun doDispatch(requestInfo: ServiceRequestInfo, responseInfo: ServiceResponseInfo): Mono<*>
 
     /**
      * 当socket连接时

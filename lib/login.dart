@@ -146,7 +146,7 @@ class _MyStatefulWidgetState extends State<MyStatefulWidget> {
                 isLoading = false;
                 info = "登录成功";
               });
-              prefs.setInt(Const.id, id);
+              prefs.setInt(Const.userId, id);
               prefs.setString(Const.username, user['username']);
               prefs.setString(Const.avatarUrl, user['avatarUrl']);
               Navigator.pop(context);

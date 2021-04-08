@@ -1,11 +1,10 @@
-import 'package:http_parser/http_parser.dart';
 import 'dart:ui';
 
 import 'package:dio/dio.dart';
 import 'package:file_selector/file_selector.dart';
 
 class Const {
-  static const id = 'id';
+  static const userId = 'userId';
   static const username = 'username';
   static const avatarUrl = 'avatarUrl';
   static const search = 'search';
@@ -24,7 +23,7 @@ final BaseOptions options = BaseOptions(
   receiveTimeout: 3000,
   receiveDataWhenStatusError: true,
   validateStatus: (code) {
-    return code == 200 || code == 500;
+    return code == 200 || code == 500 || code == 400;
   },
 );
 final Dio dio = Dio(options);

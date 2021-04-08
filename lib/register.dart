@@ -57,7 +57,7 @@ class SettingsScreenState extends State<SettingsScreen> {
 
   void readLocal() async {
     prefs = await SharedPreferences.getInstance();
-    id = prefs.getInt(Const.id) ?? -1;
+    id = prefs.getInt(Const.userId) ?? -1;
     username = prefs.getString(Const.username) ?? '';
     password = prefs.getString('aboutMe') ?? '';
     avatarUrl = prefs.getString(Const.avatarUrl);

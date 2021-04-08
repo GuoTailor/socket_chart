@@ -28,6 +28,16 @@ class MsgNotifier extends ChangeNotifier {
     notifyListeners();
   }
 
+  void insertAll(int roomId, int index, Iterable<Massage> msgs) {
+    var list = _mapMessage[roomId];
+    if(list == null) {
+      list = [];
+      _mapMessage[roomId] = list;
+    }
+    list.insertAll(index, msgs);
+    notifyListeners();
+  }
+
   List<Massage> getItems(int roomId) {
     var list = _mapMessage[roomId];
     if(list == null) {

@@ -139,8 +139,7 @@ class CustomSearchDelegate extends SearchDelegate {
 
   Future _fetchPosts() async {
     print(query);
-    var response =
-        await dio.get("/room/search", queryParameters: {"name": query});
+    var response = await dio.get("/room/search", queryParameters: {"name": query});
     print(response.data);
     if (response.statusCode == 200) {
       var list = prefs.getStringList(Const.search) ?? [];

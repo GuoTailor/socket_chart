@@ -1,10 +1,15 @@
 package com.gyh.service.controller
 
+import com.gyh.service.entity.Message
 import com.gyh.service.entity.Room
 import com.gyh.service.service.RoomService
 import kotlinx.coroutines.flow.Flow
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.data.domain.Pageable
+import org.springframework.data.domain.Slice
 import org.springframework.web.bind.annotation.*
+import reactor.core.publisher.Flux
+import reactor.core.publisher.Mono
 
 /**
  * Created by gyh on 2021/1/8
@@ -44,6 +49,11 @@ class RoomController {
     @GetMapping("/delete")
     suspend fun deleteRoom(userId: Int, roomId: Int): Int {
         return roomService.deleteRoom(userId, roomId)
+    }
+
+    @GetMapping("/message")
+    fun findAllMsg(page: Int, size: Int, roomId: Int): Flux<Message> {
+        return roomService.findAllMsg(page, size, roomId)
     }
 
 }

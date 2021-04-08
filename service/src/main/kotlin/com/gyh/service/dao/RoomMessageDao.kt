@@ -1,11 +1,15 @@
 package com.gyh.service.dao
 
-import org.springframework.data.repository.kotlin.CoroutineCrudRepository
+import com.gyh.service.entity.Message
+import org.springframework.data.domain.Pageable
+import org.springframework.data.domain.Slice
+import org.springframework.data.repository.reactive.ReactiveSortingRepository
+import reactor.core.publisher.Flux
 
 /**
  * Created by gyh on 2021/3/31
  */
-interface RoomMessageDao : CoroutineCrudRepository<RoomMessageDao, Int> {
+interface RoomMessageDao : ReactiveSortingRepository<Message, Int> {
 
-    //   wsuspend fun find
+    fun findAllByRoomId(roomId: Int, pageable: Pageable) : Flux<Message>
 }

@@ -1,5 +1,5 @@
 class Massage {
-  final int id;
+  final int userId;
   final int msgType;
   final String content;
   final String path;
@@ -8,10 +8,10 @@ class Massage {
   final int date;
   final int roomId;
 
-  Massage(this.id, this.msgType, this.content, this.path, this.name, this.avatar, this.roomId, this.date);
+  Massage(this.userId, this.msgType, this.content, this.path, this.name, this.avatar, this.roomId, this.date);
 
   Massage.fromJson(Map<String, dynamic> json)
-      : id = json['id'],
+      : userId = json['userId'],
         msgType = json['msgType'],
         content = json['content'],
         path = json['path'],
@@ -21,7 +21,7 @@ class Massage {
         roomId = json['roomId'];
 
   Map<String, dynamic> toJson() => {
-        'id': id,
+        'userId': userId,
         'msgType': msgType,
         'content': content,
         'path': path,

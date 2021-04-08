@@ -214,12 +214,12 @@ class ChatScreen extends StatefulWidget {
 class ChatScreenState extends State<ChatScreen> {
   ChatScreenState({Key key});
 
-  int id;
+  int userId;
   String username;
   String avatarUrl;
 
-  int _limit = 20;
-  final int _limitIncrement = 20;
+  int _limit = 4;
+  final int _limitIncrement = 4;
   SharedPreferences prefs;
 
   File imageFile;
@@ -232,14 +232,12 @@ class ChatScreenState extends State<ChatScreen> {
   final ScrollController listScrollController = ScrollController();
   final FocusNode focusNode = FocusNode();
 
-  _scrollListener() {
+  _scrollListener() async {
     if (listScrollController.offset >=
             listScrollController.position.maxScrollExtent &&
         !listScrollController.position.outOfRange) {
-      setState(() {
-        print("reach the bottom");
-        _limit += _limitIncrement;
-      });
+      print("reach the bottom");
+      loadMsg();
     }
     if (listScrollController.offset <=
             listScrollController.position.minScrollExtent &&
@@ -258,12 +256,26 @@ class ChatScreenState extends State<ChatScreen> {
     readLocal();
   }
 
+  void loadMsg() async {
+    var result = await dio.get("/room/message", queryParameters: {
+      "page": _limit ~/ _limitIncrement - 1,
+      "size": _limitIncrement,
+      "roomId": widget.roomId
+    });
+    print("nmka");
+    if(result.statusCode == 200) {
+      setState(() {
+        notifier.insertAll(widget.roomId, 0, (result.data as List<dynamic>).map((e) => Massage.fromJson(e)));
+        _limit += _limitIncrement;
+      });
+    }
+  }
+
   readLocal() async {
     prefs = await SharedPreferences.getInstance();
-    id = prefs.getInt(Const.id) ?? -1;
+    userId = prefs.getInt(Const.userId) ?? -1;
     username = prefs.getString(Const.username);
     avatarUrl = Const.baseUrl + "/" + prefs.getString(Const.avatarUrl);
-    print(id);
 
     channel.initWebSocket(
         onOpen: () {
@@ -299,15 +311,15 @@ class ChatScreenState extends State<ChatScreen> {
           });
           print("关闭");
         },
-        path: "/room?id=$id&username=$username&roomId=${widget.roomId}");
+        path: "/room?id=$userId&username=$username");
   }
 
   void onSendMessage(String content, int type) {
     // type: 0 = text, 1 = image, 2 = sticker
     if (content != '') {
       textEditingController.clear();
-      var message = Massage(this.id, type, content, '/msg', username, avatarUrl, widget.roomId,
-          DateTime.now().millisecondsSinceEpoch);
+      var message = Massage(this.userId, type, content, '/msg', username,
+          avatarUrl, widget.roomId, DateTime.now().millisecondsSinceEpoch);
 
       setState(() {
         notifier.insert(widget.roomId, 0, message);
@@ -461,7 +473,7 @@ class ChatScreenState extends State<ChatScreen> {
   }
 
   bool isMessageLeft(int index) =>
-      (index >= 0 && notifier.getItems(widget.roomId)[index].id != id);
+      (index >= 0 && notifier.getItems(widget.roomId)[index].userId != userId);
 
   @override
   Widget build(BuildContext context) {
