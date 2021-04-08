@@ -218,8 +218,8 @@ class ChatScreenState extends State<ChatScreen> {
   String username;
   String avatarUrl;
 
-  int _limit = 4;
-  final int _limitIncrement = 4;
+  int _limit = 20;
+  final int _limitIncrement = 20;
   SharedPreferences prefs;
 
   File imageFile;
@@ -256,6 +256,12 @@ class ChatScreenState extends State<ChatScreen> {
     readLocal();
   }
 
+  @override
+  void didUpdateWidget(covariant ChatScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    loadMsg();
+  }
+
   void loadMsg() async {
     var result = await dio.get("/room/message", queryParameters: {
       "page": _limit ~/ _limitIncrement - 1,
@@ -265,7 +271,7 @@ class ChatScreenState extends State<ChatScreen> {
     print("nmka");
     if(result.statusCode == 200) {
       setState(() {
-        notifier.insertAll(widget.roomId, 0, (result.data as List<dynamic>).map((e) => Massage.fromJson(e)));
+        notifier.addAll(widget.roomId, (result.data as List<dynamic>).map((e) => Massage.fromJson(e)));
         _limit += _limitIncrement;
       });
     }
