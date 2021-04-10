@@ -170,7 +170,7 @@ class CustomSearchDelegate extends SearchDelegate {
                 title: Text(post[index]['name'], maxLines: 1),
                 subtitle: Text(post[index]['description'], maxLines: 3),
                 onTap: () async {
-                  var userId = prefs.getInt('id') ?? -1;
+                  var userId = prefs.getInt(Const.userId) ?? -1;
                   var response = await dio.put("/room/join", queryParameters: {
                     "userId": userId,
                     "roomId": post[index]['id']

@@ -35,7 +35,7 @@ class RoomSocketHandler : SocketHandler() {
     /**
      * {"order":"/message","data":{},"req":12}
      */
-    override fun doDispatch(requestInfo: ServiceRequestInfo, responseInfo: ServiceResponseInfo): Mono<Message> {
+    override fun doDispatch(requestInfo: ServiceRequestInfo, responseInfo: ServiceResponseInfo): Mono<Void> {
         val msg = json.readValue(requestInfo.body, Message::class.java)
         logger.info(msg.toString())
         return Flux.fromIterable(SocketSessionStore.userInfoMap.entries)
@@ -47,7 +47,7 @@ class RoomSocketHandler : SocketHandler() {
                         .send(ServiceResponseInfo.DataResponse(msg, null, NotifyOrder.requestReq))
                         .flatMap { roomService.addRoomMsg(msg) }
                 } else Mono.empty()
-            }.last()
+            }.then()
     }
 
     override fun onDisconnected(queryMap: Map<String, String>, sessionHandler: WebSocketSessionHandler) {

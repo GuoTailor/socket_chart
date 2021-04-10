@@ -12,7 +12,7 @@
  Target Server Version : 130002
  File Encoding         : 65001
 
- Date: 09/04/2021 15:05:02
+ Date: 07/04/2021 17:52:22
 */
 
 
@@ -109,7 +109,7 @@ CREATE TABLE "public"."sc_user" (
   "username" varchar(255) COLLATE "pg_catalog"."default" NOT NULL,
   "password" varchar(255) COLLATE "pg_catalog"."default" NOT NULL,
   "create_time" timestamp(6) NOT NULL DEFAULT now(),
-  "avatar_url" varchar(255) COLLATE "pg_catalog"."default"
+  "avatar_url" varchar(255) COLLATE "pg_catalog"."default" NOT NULL
 )
 ;
 COMMENT ON COLUMN "public"."sc_user"."username" IS '用户名';
